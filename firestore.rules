@@ -1,10 +1,109 @@
-{
-  "projectId": "gen-lang-client-0499033598",
-  "appId": "1:16427276058:web:5c1d9ff613e80d09a27ea3",
-  "apiKey": "AIzaSyBB-2reGub9Yz8HszUWsJqG_tLaxKYqD4E",
-  "authDomain": "gen-lang-client-0499033598.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-ee66a911-0fda-40ae-89e1-06377c476551",
-  "storageBucket": "gen-lang-client-0499033598.firebasestorage.app",
-  "messagingSenderId": "16427276058",
-  "measurementId": ""
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- SECURITY HELPERS ---
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    // Strict ID Validation (Prevents Resource Exhaustion/Poisoning)
+    function isValidId(id) { 
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    // Timestamp Integrity
+    function isServerTimestamp(field) {
+      return incoming()[field] == request.time;
+    }
+
+    // --- RULES ---
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId) &&
+        incoming().uid == request.auth.uid &&
+        incoming().email is string &&
+        incoming().keys().hasAll(['uid', 'email', 'createdAt']) &&
+        incoming().keys().size() <= 8 && // Allowing space for fcmToken/followedCategories
+        isServerTimestamp('createdAt');
+      allow update: if isOwner(userId) && isValidId(userId) &&
+        incoming().uid == existing().uid &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'fcmToken', 'notificationsEnabled', 'followedCategories', 'updatedAt']) &&
+        (incoming().diff(existing()).affectedKeys().hasAny(['updatedAt']) ? isServerTimestamp('updatedAt') : true);
+    }
+
+    // Products Collection
+    match /products/{productId} {
+      allow list: if true;
+      allow get: if isValidId(productId);
+      allow create: if isSignedIn() && isValidId(productId) &&
+        incoming().sellerId == request.auth.uid &&
+        incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 100 &&
+        incoming().price is number && incoming().price >= 0 &&
+        incoming().category is string &&
+        incoming().keys().hasAll(['name', 'price', 'sellerId', 'createdAt', 'category', 'image']) &&
+        incoming().keys().size() <= 15 &&
+        isServerTimestamp('createdAt');
+      allow update: if isSignedIn() && isValidId(productId) && 
+        existing().sellerId == request.auth.uid &&
+        incoming().sellerId == existing().sellerId &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'price', 'image', 'images', 'category', 'inStock', 'location', 'phone', 'updatedAt']) &&
+        (incoming().diff(existing()).affectedKeys().hasAny(['updatedAt']) ? isServerTimestamp('updatedAt') : true);
+      allow delete: if isSignedIn() && isValidId(productId) && existing().sellerId == request.auth.uid;
+    }
+
+    // Reviews Subcollection
+    match /products/{productId}/reviews/{reviewId} {
+      allow read: if isValidId(productId) && isValidId(reviewId);
+      allow create: if isSignedIn() && isValidId(productId) && isValidId(reviewId) &&
+        exists(/databases/$(database)/documents/products/$(productId)) &&
+        incoming().userId == request.auth.uid &&
+        incoming().rating is number && incoming().rating >= 1 && incoming().rating <= 5 &&
+        incoming().comment is string && incoming().comment.size() <= 1000 &&
+        incoming().keys().hasAll(['productId', 'userId', 'userName', 'rating', 'comment', 'createdAt']) &&
+        incoming().keys().size() <= 7 &&
+        isServerTimestamp('createdAt');
+      allow delete: if isSignedIn() && isValidId(reviewId) && existing().userId == request.auth.uid;
+    }
+
+    // Chats Collection
+    match /chats/{chatId} {
+      function isParticipant() {
+        return isSignedIn() && request.auth.uid in existing().participants;
+      }
+      
+      allow list: if isSignedIn() && request.auth.uid in resource.data.participants;
+      allow get: if isParticipant();
+      allow create: if isSignedIn() && isValidId(chatId) &&
+        request.auth.uid in incoming().participants &&
+        incoming().participants.size() == 2 &&
+        incoming().keys().hasAll(['participants', 'productId', 'buyerId', 'sellerId', 'updatedAt']) &&
+        isServerTimestamp('updatedAt');
+      allow update: if isParticipant() &&
+        incoming().participants == existing().participants &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['lastMessage', 'updatedAt']) &&
+        isServerTimestamp('updatedAt');
+    }
+
+    // Messages Subcollection
+    match /chats/{chatId}/messages/{messageId} {
+      function canChat() {
+        return isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+      }
+      
+      allow read: if canChat();
+      allow create: if canChat() && isValidId(messageId) &&
+        incoming().senderId == request.auth.uid &&
+        incoming().keys().hasAll(['text', 'senderId', 'timestamp']) &&
+        incoming().text is string && incoming().text.size() > 0 && incoming().text.size() <= 1000 &&
+        isServerTimestamp('timestamp');
+    }
+  }
 }

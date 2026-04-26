@@ -1,101 +1,20 @@
-{
-  "entities": {
-    "User": {
-      "title": "User Profile",
-      "description": "User account information",
-      "type": "object",
-      "properties": {
-        "uid": { "type": "string" },
-        "email": { "type": "string" },
-        "displayName": { "type": "string" },
-        "photoURL": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["uid", "email"]
-    },
-    "Product": {
-      "title": "Product",
-      "description": "Product listed in the marketplace",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "price": { "type": "number" },
-        "image": { "type": "string" },
-        "category": { "type": "string" },
-        "sellerId": { "type": "string" },
-        "sellerName": { "type": "string" },
-        "rating": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "price", "sellerId"]
-    },
-    "Review": {
-      "title": "Product Review",
-      "description": "User rating and comment for a product",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "productId": { "type": "string" },
-        "userId": { "type": "string" },
-        "userName": { "type": "string" },
-        "userPhoto": { "type": "string" },
-        "rating": { "type": "number" },
-        "comment": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["productId", "userId", "rating", "comment"]
-    },
-    "Chat": {
-      "title": "Chat",
-      "description": "Chat session between buyer and seller",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "participants": { "type": "array", "items": { "type": "string" } },
-        "productId": { "type": "string" },
-        "productName": { "type": "string" },
-        "buyerId": { "type": "string" },
-        "sellerId": { "type": "string" },
-        "lastMessage": { "type": "string" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["participants", "productId", "buyerId", "sellerId"]
-    },
-    "Message": {
-      "title": "Message",
-      "description": "Single message inside a chat",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "text": { "type": "string" },
-        "senderId": { "type": "string" },
-        "timestamp": { "type": "string", "format": "date-time" }
-      },
-      "required": ["text", "senderId", "timestamp"]
-    }
-  },
-  "firestore": {
-    "/users/{userId}": {
-      "schema": "User",
-      "description": "Public user profiles"
-    },
-    "/products/{productId}": {
-      "schema": "Product",
-      "description": "Marketplace products"
-    },
-    "/products/{productId}/reviews/{reviewId}": {
-      "schema": "Review",
-      "description": "Product reviews"
-    },
-    "/chats/{chatId}": {
-      "schema": "Chat",
-      "description": "Direct message threads"
-    },
-    "/chats/{chatId}/messages/{messageId}": {
-      "schema": "Message",
-      "description": "Messages within a thread"
-    }
-  }
-}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>سوقنا - المنصة الجزائرية الأولى</title>
+
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://images.unsplash.com https://*.googleusercontent.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.run.app; frame-src 'self' https://*.firebaseapp.com;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <link rel="manifest" href="/manifest.json">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

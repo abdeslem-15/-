@@ -1,70 +1,8 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp, collection, addDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
-import firebaseConfig from '../../firebase-applet-config.json';
-
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth(app);
-export const messaging: Messaging | null = typeof window !== 'undefined' ? getMessaging(app) : null;
-const googleProvider = new GoogleAuthProvider();
-
-export const requestNotificationPermission = async (user: User) => {
-  if (!messaging) return;
-  
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      try {
-        const token = await getToken(messaging, {
-          // If you have a VAPID key, place it here. If not, it might work without for some cases
-          // or throw an error. Replace with your actual key from Firebase Console.
-          vapidKey: typeof process.env.VITE_FIREBASE_VAPID_KEY !== 'undefined' ? process.env.VITE_FIREBASE_VAPID_KEY : undefined
-        });
-        
-        if (token) {
-          await setDoc(doc(db, 'users', user.uid), {
-            fcmToken: token,
-            notificationsEnabled: true,
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-          return token;
-        }
-      } catch (tokenError) {
-        console.error("FCM Token Error: Please ensure you have configured a valid VAPID key in your Firebase console and environment variables.", tokenError);
-      }
-    }
-  } catch (error) {
-    console.error("Error requesting notification permission", error);
-  }
-  return null;
-};
-
-export const signInWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    
-    // Create or update user profile
-    const userRef = doc(db, 'users', user.uid);
-    const userSnap = await getDoc(userRef);
-    
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        createdAt: serverTimestamp()
-      });
-    }
-    
-    return user;
-  } catch (error) {
-    console.error("Error signing in with Google", error);
-    throw error;
-  }
-};
-
-export const logout = () => auth.signOut();
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
