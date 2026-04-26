@@ -1,64 +1,20 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp, collection, addDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
-import firebaseConfig from '../../firebase-applet-config.json';
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth(app);
-export const messaging: Messaging | null = typeof window !== 'undefined' ? getMessaging(app) : null;
-const googleProvider = new GoogleAuthProvider();
+# Run and deploy your AI Studio app
 
-export const requestNotificationPermission = async (user: User) => {
-  if (!messaging) return;
-  
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      const token = await getToken(messaging, {
-        vapidKey: 'BD8I-4M_C-t8_t3_t3_t3_t3_t3_t3_t3_t3_t3_t3_t3' // Placeholder, user will need to provide their own or I can try without it
-      });
-      
-      if (token) {
-        await setDoc(doc(db, 'users', user.uid), {
-          fcmToken: token,
-          notificationsEnabled: true,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-        return token;
-      }
-    }
-  } catch (error) {
-    console.error("Error requesting notification permission", error);
-  }
-  return null;
-};
+This contains everything you need to run your app locally.
 
-export const signInWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    
-    // Create or update user profile
-    const userRef = doc(db, 'users', user.uid);
-    const userSnap = await getDoc(userRef);
-    
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        createdAt: serverTimestamp()
-      });
-    }
-    
-    return user;
-  } catch (error) {
-    console.error("Error signing in with Google", error);
-    throw error;
-  }
-};
+View your app in AI Studio: https://ai.studio/apps/ee66a911-0fda-40ae-89e1-06377c476551
 
-export const logout = () => auth.signOut();
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
