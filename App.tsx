@@ -1,10 +1,26 @@
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+firebase.initializeApp({
+  apiKey: "AIzaSyBB-2reGub9Yz8HszUWsJqG_tLaxKYqD4E",
+  authDomain: "gen-lang-client-0499033598.firebaseapp.com",
+  projectId: "gen-lang-client-0499033598",
+  storageBucket: "gen-lang-client-0499033598.firebasestorage.app",
+  messagingSenderId: "16427276058",
+  appId: "1:16427276058:web:5c1d9ff613e80d09a27ea3"
+});
+
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  
+  const notificationTitle = payload.notification?.title || payload.data?.title || 'تنبيه جديد';
+  const notificationOptions = {
+    body: payload.notification?.body || payload.data?.body || 'لديك رسالة جديدة في سوقنا',
+    tag: payload.data?.tag || 'fcm-notification',
+    data: payload.data
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});

@@ -1,26 +1,22 @@
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
+# Souqna Algiers - سوقنا الجزائر
 
-firebase.initializeApp({
-  apiKey: "AIzaSyBB-2reGub9Yz8HszUWsJqG_tLaxKYqD4E",
-  authDomain: "gen-lang-client-0499033598.firebaseapp.com",
-  projectId: "gen-lang-client-0499033598",
-  storageBucket: "gen-lang-client-0499033598.firebasestorage.app",
-  messagingSenderId: "16427276058",
-  appId: "1:16427276058:web:5c1d9ff613e80d09a27ea3"
-});
+تطبيق متجر إلكتروني متكامل مبني باستخدام React و Firebase.
 
-const messaging = firebase.messaging();
+## المميزات
+- تصفح المنتجات حسب الفئات.
+- نظام بحث متقدم.
+- نظام دردشة فوري مع البائعين.
+- نظام تقييم ومراجعة المنتجات.
+- سلة تسوق ذكية.
+- حماية متقدمة للعمليات.
 
-messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'تنبيه جديد';
-  const notificationOptions = {
-    body: payload.notification?.body || payload.data?.body || 'لديك رسالة جديدة في سوقنا',
-    tag: payload.data?.tag || 'fcm-notification',
-    data: payload.data
-  };
+## التقنيات المستخدمة
+- **Frontend**: React, Vite, Tailwind CSS 4, Motion.
+- **Backend**: Firebase (Auth, Firestore, Messaging).
+- **Icons**: Lucide React.
+- **Virtualization**: Virtua (لتحسين أداء القوائم الطويلة).
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
+## البدء في العمل
+1. تثبيت التبعيات: `npm install`
+2. تشغيل بيئة التطوير: `npm run dev`
+3. بناء نسخة النشر: `npm run build`
